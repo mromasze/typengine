@@ -23,6 +23,11 @@ pure C++ API.
 - **UI** — simple buttons with `std::function` callbacks
 - **Config hot-reload** — optional `key=value` file watched at runtime
   (`vsync`, `fps_limit`)
+- **Lua scripting (optional)** — Lua 5.4 + sol2 `ScriptHost` for content
+  scripting (GUI, quests, dialogue): keyed events, timers, script-built UI
+  panels, **hot-reload of .lua files while the game runs**
+- **Text rendering** — built-in 5x7 pixel font (`drawText`), no font asset
+  needed
 
 ## Dependencies
 
@@ -33,6 +38,8 @@ All fetched automatically via CMake `FetchContent` when not installed:
 | [SDL2](https://github.com/libsdl-org/SDL) | zlib | window, rendering, input |
 | [EnTT](https://github.com/skypjack/entt) | MIT | ECS |
 | [stb_image](https://github.com/nothings/stb) (vendored) | public domain / MIT | image loading |
+| [Lua 5.4](https://www.lua.org) (optional) | MIT | scripting |
+| [sol2](https://github.com/ThePhD/sol2) (optional) | MIT | Lua bindings |
 
 No GPL dependencies.
 
@@ -169,6 +176,53 @@ registry.view<ty::Transform, ty::Collider>().each(
 grid.query(attackArea, [&](ty::Entity hit) { /* narrow phase / damage */ });
 ```
 
+### Scripting (optional)
+
+Built when `TYPENGINE_SCRIPTING=ON` (default). Disable with
+`cmake -B build -DTYPENGINE_SCRIPTING=OFF` for a script-free engine.
+
+The contract: **scripts orchestrate, C++ executes**. Game systems emit events;
+Lua reacts, builds UI and drives quests/dialogue. The VM is never on a
+per-frame per-entity path.
+
+```cpp
+ty::ScriptHost scripts;
+scripts.initialize();
+scripts.setScriptRoot("scripts");
+scripts.runFile("main.lua");                 // tracked: edits hot-reload live
+
+// each frame:
+scripts.update(engine.input(), dt);
+scripts.render(engine.renderer());
+
+// from gameplay code (no sol2 include needed):
+scripts.emit("enemy_killed", {{"remaining", 2}});
+
+// registering game-specific bindings (include <sol/sol.hpp> here):
+scripts.lua()["player"] = ...;
+```
+
+```lua
+-- scripts/main.lua
+engine.on("enemy_killed", "tracker", function(e)
+    local p = ui.panel("hud")
+    p:clear()
+    p:label{ x = 20, y = 80, text = "Enemies left: " .. e.remaining }
+    p:show()
+end)
+```
+
+Editor autocomplete/type-checking: point the
+[Lua Language Server](https://github.com/LuaLS/lua-language-server) at
+`docs/lua-api/` via `.luarc.json`:
+
+```json
+{ "workspace.library": ["typengine/docs/lua-api"], "runtime.version": "Lua 5.4" }
+```
+
+Run the demo: `./build/examples/scripting/scripting-example` and edit
+`scripts/hello.lua` while it runs.
+
 ### Headers
 
 | Header | Contents |
@@ -181,7 +235,8 @@ grid.query(attackArea, [&](ty::Entity hit) { /* narrow phase / damage */ });
 | `engine/IsoTilemap.hpp` | `IsoTilemap`, `Tileset` |
 | `engine/Tilemap.hpp` | `TileGrid` (flat tile storage) |
 | `engine/SpatialGrid.hpp` | `SpatialGrid<T>` |
-| `engine/UI.hpp` | `UIPanel`, `UIButton` |
+| `engine/UI.hpp` | `UIPanel`, `UIButton`, `UILabel`, `UIBar` |
+| `engine/Script.hpp` | `ScriptHost` (optional Lua scripting) |
 | `engine/Math.hpp` | `Vec2`, `Rect`, `Color`, helpers |
 | `engine/Typengine.hpp` | umbrella header |
 

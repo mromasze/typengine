@@ -76,6 +76,39 @@ target_link_libraries(typengine
 # Game code defines a plain main(); no SDL_main entry-point rewriting.
 target_compile_definitions(typengine PRIVATE SDL_MAIN_HANDLED)
 
+# --- optional Lua scripting module (Lua 5.4 MIT + sol2 MIT) ---------------------
+option(TYPENGINE_SCRIPTING "Enable the Lua scripting module (ScriptHost)" ON)
+if(TYPENGINE_SCRIPTING)
+    # Lua has no upstream CMake — fetch the sources and build a static lib.
+    FetchContent_Declare(
+        lua
+        GIT_REPOSITORY https://github.com/lua/lua.git
+        GIT_TAG v5.4.7
+        GIT_SHALLOW TRUE
+    )
+    FetchContent_MakeAvailable(lua)
+    file(GLOB LUA_SOURCES ${lua_SOURCE_DIR}/*.c)
+    list(FILTER LUA_SOURCES EXCLUDE REGEX "(lua|luac|onelua|ltests)\\.c$")
+    add_library(lua_static STATIC ${LUA_SOURCES})
+    target_include_directories(lua_static PUBLIC $<BUILD_INTERFACE:${lua_SOURCE_DIR}>)
+
+    find_package(sol2 CONFIG QUIET)
+    if(NOT sol2_FOUND)
+        message(STATUS "typengine: sol2 not found, fetching from source")
+        FetchContent_Declare(
+            sol2
+            GIT_REPOSITORY https://github.com/ThePhD/sol2.git
+            GIT_TAG v3.3.0
+            GIT_SHALLOW TRUE
+        )
+        FetchContent_MakeAvailable(sol2)
+    endif()
+
+    target_sources(typengine PRIVATE src/Script.cpp)
+    target_link_libraries(typengine PUBLIC sol2::sol2 lua_static)
+    target_compile_definitions(typengine PUBLIC TYPENGINE_HAS_SCRIPTING SOL_ALL_SAFETIES_ON=1)
+endif()
+
 if(WIN32)
     # SDL2 static needs these on MinGW/MSVC when linked into the final exe.
     target_link_libraries(typengine PRIVATE winmm imm32 version setupapi)
@@ -84,6 +117,9 @@ endif()
 # --- examples ------------------------------------------------------------------
 if(TYPENGINE_BUILD_EXAMPLES)
     add_subdirectory(examples/hello-world)
+    if(TYPENGINE_SCRIPTING)
+        add_subdirectory(examples/scripting)
+    endif()
 endif()
 
 # --- install (optional: use as an installed package instead of a subdirectory) --

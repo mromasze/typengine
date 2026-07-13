@@ -44,6 +44,12 @@ public:
     // Debug seven-segment number rendering (no font asset needed).
     void drawNumber(int value, Vec2 pos, float size, Color c, int layer = 100);
 
+    // Text via the built-in 5x7 pixel font (ASCII 32-126, no asset needed).
+    // `scale` = pixel multiplier: glyphs are 5x7, advance 6, so scale 2 -> 12px/char.
+    void drawText(const char* text, Vec2 pos, float scale, Color c, int layer = 100);
+    // Size drawText would occupy (single line).
+    Vec2 measureText(const char* text, float scale) const;
+
     int width() const;
     int height() const;
     void setLogicalResolution(int w, int h);
