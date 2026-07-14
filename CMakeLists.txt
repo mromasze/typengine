@@ -54,6 +54,8 @@ add_library(typengine STATIC
     src/Input.cpp
     src/IsoTilemap.cpp
     src/ECS.cpp
+    src/JobSystem.cpp
+    src/Skill.cpp
     src/UI.cpp
 )
 add_library(typengine::typengine ALIAS typengine)

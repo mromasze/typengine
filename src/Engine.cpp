@@ -48,6 +48,8 @@ bool Engine::initialize(const EngineConfig& config) {
 
     if (!renderer_.initialize(window_, config_.vsync)) return false;
 
+    jobs_.initialize(config_.workerThreads);
+
     initialized_ = true;
     lastFrameTime_ = time();
     return true;
@@ -60,6 +62,7 @@ void Engine::shutdown() {
         scene_.reset();
     }
     pendingScene_.reset();
+    jobs_.shutdown();
     renderer_.shutdown();
     if (window_) {
         SDL_DestroyWindow(window_);

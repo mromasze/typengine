@@ -6,8 +6,10 @@
 #include "engine/Input.hpp"
 #include "engine/IsoCamera.hpp"
 #include "engine/IsoTilemap.hpp"
+#include "engine/JobSystem.hpp"
 #include "engine/Math.hpp"
 #include "engine/Renderer.hpp"
+#include "engine/Skill.hpp"
 #ifdef TYPENGINE_HAS_SCRIPTING
 #include "engine/Script.hpp"
 #endif

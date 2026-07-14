@@ -11,9 +11,9 @@
 //   });
 //   grid.query(attackArea, [&](ty::Entity hit) { ... });
 
+#include <algorithm>
 #include <cstdint>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "engine/Math.hpp"
@@ -36,16 +36,21 @@ public:
     }
 
     // Calls fn(id) once per distinct entry whose AABB overlaps `area`.
+    // Thread-safe against other concurrent query() calls (read-only).
     template <typename Fn>
     void query(const Rect& area, Fn&& fn) const {
-        std::unordered_set<T> seen;
+        // Queries touch a handful of entries, so linear dedup over a small
+        // vector beats an unordered_set (no per-node allocation).
+        std::vector<T> seen;
+        seen.reserve(16);
         forEachCell(area, [&](std::int64_t key) {
             auto it = cells_.find(key);
             if (it == cells_.end()) return;
             for (const auto& entry : it->second) {
-                if (entry.aabb.intersects(area) && seen.insert(entry.id).second) {
-                    fn(entry.id);
-                }
+                if (!entry.aabb.intersects(area)) continue;
+                if (std::find(seen.begin(), seen.end(), entry.id) != seen.end()) continue;
+                seen.push_back(entry.id);
+                fn(entry.id);
             }
         });
     }

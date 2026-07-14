@@ -13,6 +13,7 @@
 #include <string>
 
 #include "engine/Input.hpp"
+#include "engine/JobSystem.hpp"
 #include "engine/Renderer.hpp"
 
 struct SDL_Window;
@@ -39,6 +40,8 @@ struct EngineConfig {
     bool vsync = true;
     int fpsLimit = 60;              // used when vsync is off; 0 = uncapped
     bool showFps = false;           // FPS overlay, top-right corner
+    // Worker threads for jobs()/parallelFor. 0 = auto (hardware threads - 1).
+    unsigned workerThreads = 0;
     // Optional key=value config file, hot-reloaded at runtime
     // (supported keys: vsync, fps_limit, show_fps). Empty = disabled.
     std::string configFile{};
@@ -56,6 +59,7 @@ public:
 
     Renderer& renderer() { return renderer_; }
     Input& input() { return input_; }
+    JobSystem& jobs() { return jobs_; }
 
     // --- scene-driven loop -------------------------------------------------
     // Runs until quit() or the window is closed. Takes ownership of `first`.
@@ -87,6 +91,7 @@ private:
     SDL_Window* window_ = nullptr;
     Renderer renderer_;
     Input input_;
+    JobSystem jobs_;
 
     std::unique_ptr<Scene> scene_;
     std::unique_ptr<Scene> pendingScene_;
