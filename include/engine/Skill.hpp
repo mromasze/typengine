@@ -58,7 +58,9 @@ public:
 
     // Ticks cooldowns and casts skills whose binding was pressed (or held,
     // for repeatWhileHeld). `aimWorld` is passed to Skill::onCast.
-    void update(const Input& input, float dt, Vec2 aimWorld);
+    // `castMouse = false` suppresses the two mouse slots for this frame
+    // (pass it while the cursor is over UI, e.g. SkillBarUI::contains()).
+    void update(const Input& input, float dt, Vec2 aimWorld, bool castMouse = true);
 
     // Manual cast, same cooldown rules. Returns true if the skill fired.
     bool tryCast(SkillSlot slot, Vec2 targetWorld);

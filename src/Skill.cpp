@@ -25,7 +25,7 @@ Key SkillBar::key(SkillSlot slot) const {
     return (i >= 0 && i < 4) ? keys_[i] : Key::Count;
 }
 
-void SkillBar::update(const Input& input, float dt, Vec2 aimWorld) {
+void SkillBar::update(const Input& input, float dt, Vec2 aimWorld, bool castMouse) {
     for (auto& state : slots_) {
         state.cooldownLeft -= dt;
         if (state.cooldownLeft < 0.0f) state.cooldownLeft = 0.0f;
@@ -41,6 +41,7 @@ void SkillBar::update(const Input& input, float dt, Vec2 aimWorld) {
     for (int i = 0; i < SkillSlotCount; ++i) {
         const Skill& skill = slots_[i].skill;
         if (skill.empty()) continue;
+        if (i >= 4 && !castMouse) continue;
         if (slotActive(i, skill.repeatWhileHeld)) {
             tryCast(static_cast<SkillSlot>(i), aimWorld);
         }
