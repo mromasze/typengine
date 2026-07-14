@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ty {
@@ -39,6 +40,7 @@ struct Renderer::Impl {
     int width = 1280;
     int height = 720;
     TextureId fontTexture = InvalidTexture; // lazy-built 5x7 ASCII strip
+    std::unordered_map<std::string, TextureId> pathCache; // dedup loads across scenes
 };
 
 Renderer::Renderer() : impl(std::make_unique<Impl>()) {}
@@ -66,6 +68,7 @@ void Renderer::shutdown() {
         if (t.texture) SDL_DestroyTexture(t.texture);
     }
     impl->textures.clear();
+    impl->pathCache.clear();
     if (impl->sdl) {
         SDL_DestroyRenderer(impl->sdl);
         impl->sdl = nullptr;
@@ -115,6 +118,8 @@ void Renderer::setVSync(bool enabled) {
 }
 
 TextureId Renderer::loadTexture(const char* path) {
+    if (auto it = impl->pathCache.find(path); it != impl->pathCache.end()) return it->second;
+
     int w = 0, h = 0, channels = 0;
     stbi_uc* pixels = stbi_load(path, &w, &h, &channels, 4);
     if (!pixels) {
@@ -137,7 +142,9 @@ TextureId Renderer::loadTexture(const char* path) {
     stbi_image_free(pixels);
 
     impl->textures.push_back({tex, w, h});
-    return static_cast<TextureId>(impl->textures.size()) - 1;
+    TextureId id = static_cast<TextureId>(impl->textures.size()) - 1;
+    impl->pathCache.emplace(path, id);
+    return id;
 }
 
 TextureId Renderer::createSolidTexture(Color c) {
