@@ -87,6 +87,13 @@ void Engine::run(std::unique_ptr<Scene> first) {
             scene_->update(*this, dt);
             renderer_.beginFrame();
             scene_->render(*this);
+            if (config_.showFps) {
+                std::string text = "FPS " + std::to_string(static_cast<int>(fps_ + 0.5f));
+                float w = renderer_.measureText(text.c_str(), 2.0f).x;
+                renderer_.drawText(text.c_str(),
+                                   {static_cast<float>(renderer_.width()) - w - 12.0f, 8.0f},
+                                   2.0f, {120, 255, 140, 255}, 100000);
+            }
             renderer_.endFrame();
         }
 
@@ -109,6 +116,15 @@ float Engine::beginFrame() {
     frameStartTime_ = time();
     float dt = frameStartTime_ - lastFrameTime_;
     lastFrameTime_ = frameStartTime_;
+
+    ++fpsFrames_;
+    fpsAccum_ += dt;
+    if (fpsAccum_ >= 0.5f) {
+        fps_ = fpsFrames_ / fpsAccum_;
+        fpsFrames_ = 0;
+        fpsAccum_ = 0.0f;
+    }
+
     if (dt > 0.25f) dt = 0.25f; // clamp huge hitches (debugger pauses, window drags)
 
     input_.update();
@@ -163,6 +179,8 @@ void Engine::loadConfigFile() {
                 config_.fpsLimit = std::stoi(val);
             } catch (...) {
             }
+        } else if (key == "show_fps") {
+            config_.showFps = (val == "true" || val == "1");
         }
     }
 

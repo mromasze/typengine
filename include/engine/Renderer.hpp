@@ -4,6 +4,7 @@
 // Public header is SDL-free; all SDL usage lives in Renderer.cpp.
 
 #include <memory>
+#include <vector>
 
 #include "engine/Math.hpp"
 
@@ -36,6 +37,10 @@ public:
     TextureId createSolidTexture(Color c);
     // Texture from raw RGBA8 pixels (w*h*4 bytes) — procedural content.
     TextureId createTexture(const void* rgbaPixels, int w, int h);
+    // Decode an image file to RGBA8 pixels without creating a texture —
+    // for procedural processing (atlas slicing, iso re-projection, masks).
+    // Empty vector on failure.
+    std::vector<unsigned char> loadImagePixels(const char* path, int& w, int& h) const;
     Vec2i textureSize(TextureId id) const;
 
     // Queued draws; `layer` decides ordering (lower = drawn first).

@@ -147,6 +147,22 @@ TextureId Renderer::loadTexture(const char* path) {
     return id;
 }
 
+std::vector<unsigned char> Renderer::loadImagePixels(const char* path, int& w, int& h) const {
+    int channels = 0;
+    stbi_uc* pixels = stbi_load(path, &w, &h, &channels, 4);
+    if (!pixels) {
+        std::string fallback = std::string("../") + path;
+        pixels = stbi_load(fallback.c_str(), &w, &h, &channels, 4);
+        if (!pixels) {
+            std::cerr << "[typengine] Failed to load image: " << path << "\n";
+            return {};
+        }
+    }
+    std::vector<unsigned char> out(pixels, pixels + static_cast<std::size_t>(w) * h * 4);
+    stbi_image_free(pixels);
+    return out;
+}
+
 TextureId Renderer::createSolidTexture(Color c) {
     const Uint8 pixel[4] = {c.r, c.g, c.b, c.a};
     return createTexture(pixel, 1, 1);

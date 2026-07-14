@@ -1,5 +1,7 @@
 #include "engine/UI.hpp"
 
+#include <vector>
+
 #include "engine/Input.hpp"
 
 namespace ty {
@@ -20,12 +22,16 @@ void UIPanel::update(const Input& input) {
     Vec2 m = {static_cast<float>(mouse.x), static_cast<float>(mouse.y)};
     bool released = input.wasMouseReleased(MouseButton::Left);
 
+    // Collect first, invoke after: a callback may clear()/rebuild this panel,
+    // which would invalidate the iterator (and the callback itself) mid-loop.
+    std::vector<std::function<void()>> fired;
     for (auto& btn : buttons_) {
         btn.hovered = btn.rect.contains(m);
         if (btn.hovered && released && btn.onClick) {
-            btn.onClick();
+            fired.push_back(btn.onClick);
         }
     }
+    for (auto& fn : fired) fn();
 }
 
 UILabel& UIPanel::addLabel(std::string text, Vec2 pos, float scale, Color color) {

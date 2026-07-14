@@ -38,8 +38,9 @@ struct EngineConfig {
     int height = 720;
     bool vsync = true;
     int fpsLimit = 60;              // used when vsync is off; 0 = uncapped
+    bool showFps = false;           // FPS overlay, top-right corner
     // Optional key=value config file, hot-reloaded at runtime
-    // (supported keys: vsync, fps_limit). Empty = disabled.
+    // (supported keys: vsync, fps_limit, show_fps). Empty = disabled.
     std::string configFile{};
 };
 
@@ -75,6 +76,11 @@ public:
     void setPaused(bool p) { paused_ = p; }
     bool isPaused() const { return paused_; }
 
+    // Measured frames per second (updated twice a second).
+    float fps() const { return fps_; }
+    void setShowFps(bool show) { config_.showFps = show; }
+    bool isShowFpsEnabled() const { return config_.showFps; }
+
 private:
     void loadConfigFile();
 
@@ -92,6 +98,10 @@ private:
 
     float lastFrameTime_ = 0.0f;
     float frameStartTime_ = 0.0f;
+
+    float fps_ = 0.0f;
+    int fpsFrames_ = 0;
+    float fpsAccum_ = 0.0f;
 
     long long configMTime_ = 0;
     float nextConfigCheck_ = 0.0f;
