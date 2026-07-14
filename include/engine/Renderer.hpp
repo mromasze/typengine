@@ -44,7 +44,10 @@ public:
     Vec2i textureSize(TextureId id) const;
 
     // Queued draws; `layer` decides ordering (lower = drawn first).
-    void drawTexture(TextureId id, const Rect& src, const Rect& dst, int layer = 0);
+    // `tint` modulates color and alpha (white = draw unchanged) — lighting,
+    // fog of war, ghosting.
+    void drawTexture(TextureId id, const Rect& src, const Rect& dst, int layer = 0,
+                     Color tint = {255, 255, 255, 255});
     void drawFilledRect(const Rect& dst, Color c, int layer = 0);
     // Debug seven-segment number rendering (no font asset needed).
     void drawNumber(int value, Vec2 pos, float size, Color c, int layer = 100);

@@ -40,6 +40,7 @@ struct Sprite {
     Vec2 size{};                // destination size (pixels at zoom 1)
     Vec2 origin{};              // anchor inside `size` placed at the world position
     int layer = 10;             // renderer layer; iso depth refines order inside it
+    Color tint{255, 255, 255, 255}; // color/alpha modulation (lighting, fog; a=0 hides)
 };
 
 // Axis-aligned collision box in world (tile) units, relative to the entity

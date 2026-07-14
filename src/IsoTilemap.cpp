@@ -43,11 +43,20 @@ void IsoTilemap::render(Renderer& renderer, const IsoCamera& camera, int layer) 
     int x1 = std::min(grid_.width(), static_cast<int>(std::ceil(maxX)) + 2);
     int y1 = std::min(grid_.height(), static_cast<int>(std::ceil(maxY)) + 2);
 
+    const bool lit = lightingEnabled();
+
     // Row-major iteration already yields correct painter's order for tiles.
     for (int y = y0; y < y1; ++y) {
         for (int x = x0; x < x1; ++x) {
             TileId id = grid_.at(x, y);
             if (id == 0) continue;
+
+            Color tint{255, 255, 255, 255};
+            if (lit) {
+                std::uint8_t v = light_[static_cast<std::size_t>(y) * grid_.width() + x];
+                if (v == 0) continue; // unexplored — pitch black, skip the draw
+                tint = {v, v, v, 255};
+            }
 
             int cell = id - 1;
             int cellX = (cell % tileset_.columns) * tileset_.tileW;
@@ -60,7 +69,7 @@ void IsoTilemap::render(Renderer& renderer, const IsoCamera& camera, int layer) 
 
             renderer.drawTexture(tileset_.texture,
                                  {static_cast<float>(cellX), static_cast<float>(cellY), srcW, srcH},
-                                 dst, layer);
+                                 dst, layer, tint);
         }
     }
 }

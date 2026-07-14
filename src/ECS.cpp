@@ -17,7 +17,7 @@ void renderSprites(Registry& registry, Renderer& renderer, const IsoCamera& came
 
     auto view = registry.view<const Transform, const Sprite>();
     for (auto [entity, transform, sprite] : view.each()) {
-        if (sprite.texture == InvalidTexture) continue;
+        if (sprite.texture == InvalidTexture || sprite.tint.a == 0) continue;
         items.push_back({&transform, &sprite, isoDepth(transform.position)});
     }
 
@@ -38,7 +38,7 @@ void renderSprites(Registry& registry, Renderer& renderer, const IsoCamera& came
         Rect dst = {screen.x - item.sprite->origin.x * item.transform->scale.x * zoom,
                     screen.y - item.sprite->origin.y * item.transform->scale.y * zoom, w, h};
         renderer.drawTexture(item.sprite->texture, item.sprite->src, dst,
-                             item.sprite->layer * 10000 + order);
+                             item.sprite->layer * 10000 + order, item.sprite->tint);
         ++order;
     }
 }

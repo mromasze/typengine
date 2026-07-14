@@ -183,8 +183,10 @@ Vec2i Renderer::textureSize(TextureId id) const {
     return {impl->textures[id].width, impl->textures[id].height};
 }
 
-void Renderer::drawTexture(TextureId id, const Rect& src, const Rect& dst, int layer) {
-    impl->queue.push_back({DrawCmd::Type::Texture, id, src, dst, {}, layer});
+void Renderer::drawTexture(TextureId id, const Rect& src, const Rect& dst, int layer,
+                           Color tint) {
+    if (tint.a == 0) return; // fully faded out — skip the draw entirely
+    impl->queue.push_back({DrawCmd::Type::Texture, id, src, dst, tint, layer});
 }
 
 void Renderer::drawFilledRect(const Rect& dst, Color c, int layer) {

@@ -3,6 +3,7 @@
 // Isometric tilemap: flat TileGrid + tileset atlas + culled diamond rendering.
 // Tile id 0 is "empty" (never drawn). Walkability is a per-tile-id property.
 
+#include <cstdint>
 #include <vector>
 
 #include "engine/IsoCamera.hpp"
@@ -63,6 +64,31 @@ public:
                isWalkable({aabb.x + aabb.w, aabb.y + aabb.h});
     }
 
+    // --- lighting / fog of war ----------------------------------------------
+    // Optional per-tile brightness (0 = pitch black, tile isn't drawn at all;
+    // 255 = fully lit). Game code writes it every frame from its visibility
+    // system; disabled maps render fully lit.
+    void enableLighting(std::uint8_t initial = 0) {
+        light_.assign(grid_.size(), initial);
+    }
+    void disableLighting() { light_.clear(); }
+    bool lightingEnabled() const { return light_.size() == grid_.size() && !light_.empty(); }
+    void setLight(int x, int y, std::uint8_t v) {
+        if (lightingEnabled() && grid_.inBounds(x, y))
+            light_[static_cast<std::size_t>(y) * grid_.width() + x] = v;
+    }
+    std::uint8_t lightAt(int x, int y) const {
+        if (!lightingEnabled()) return 255;
+        if (!grid_.inBounds(x, y)) return 0;
+        return light_[static_cast<std::size_t>(y) * grid_.width() + x];
+    }
+    // World-space sample (tile units) — for tinting entities by the light of
+    // the tile they stand on.
+    std::uint8_t lightAtWorld(Vec2 world) const {
+        return lightAt(static_cast<int>(std::floor(world.x)),
+                       static_cast<int>(std::floor(world.y)));
+    }
+
     // --- rendering ---------------------------------------------------------
     // Draws all tiles visible through `camera`, culled to the viewport.
     // `layer` is the renderer layer for the whole map (entities go above).
@@ -72,6 +98,7 @@ private:
     TileGrid grid_;
     Tileset tileset_;
     std::vector<std::uint8_t> walkable_;
+    std::vector<std::uint8_t> light_;   // empty = lighting disabled
 };
 
 } // namespace ty
