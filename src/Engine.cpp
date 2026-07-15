@@ -150,6 +150,28 @@ void Engine::endFrame() {
 
 float Engine::time() const { return static_cast<float>(SDL_GetTicks64()) / 1000.0f; }
 
+void Engine::setFullscreen(bool fs) {
+    if (!window_ || fs == fullscreen_) return;
+    SDL_SetWindowFullscreen(window_, fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+    fullscreen_ = fs;
+}
+
+void Engine::setWindowSize(int w, int h) {
+    if (!window_ || w <= 0 || h <= 0) return;
+    config_.width = w;
+    config_.height = h;
+    if (!fullscreen_) {
+        SDL_SetWindowSize(window_, w, h);
+        SDL_SetWindowPosition(window_, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    }
+    renderer_.setLogicalResolution(w, h);
+}
+
+void Engine::setVSync(bool enabled) {
+    config_.vsync = enabled;
+    renderer_.setVSync(enabled);
+}
+
 int Engine::screenWidth() const { return renderer_.width(); }
 int Engine::screenHeight() const { return renderer_.height(); }
 

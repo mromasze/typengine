@@ -77,6 +77,15 @@ public:
     int screenWidth() const;
     int screenHeight() const;
 
+    // --- display -------------------------------------------------------------
+    void setFullscreen(bool fs);    // borderless fullscreen desktop
+    bool isFullscreen() const { return fullscreen_; }
+    // Windowed-mode resolution; also becomes the logical render resolution
+    // (fullscreen scales it to the desktop with letterboxing).
+    void setWindowSize(int w, int h);
+    void setVSync(bool enabled);
+    bool isVSyncEnabled() const { return config_.vsync; }
+
     void setPaused(bool p) { paused_ = p; }
     bool isPaused() const { return paused_; }
 
@@ -100,6 +109,7 @@ private:
     bool running_ = false;
     bool paused_ = false;
     bool initialized_ = false;
+    bool fullscreen_ = false;
 
     float lastFrameTime_ = 0.0f;
     float frameStartTime_ = 0.0f;

@@ -28,9 +28,9 @@ void renderSprites(Registry& registry, Renderer& renderer, const IsoCamera& came
               });
 
     const float zoom = camera.getZoom();
-    // Sequential sub-layer indices keep the renderer's stable sort from
-    // reordering what we just depth-sorted.
-    int order = 0;
+    // Submit in depth order at the sprite's own layer — the renderer's
+    // stable sort preserves this order within a layer, and UI layers
+    // (100+, pause menus 1000) stay above the world as intended.
     for (const auto& item : items) {
         Vec2 screen = camera.worldToScreen(item.transform->position);
         float w = item.sprite->size.x * item.transform->scale.x * zoom;
@@ -38,8 +38,7 @@ void renderSprites(Registry& registry, Renderer& renderer, const IsoCamera& came
         Rect dst = {screen.x - item.sprite->origin.x * item.transform->scale.x * zoom,
                     screen.y - item.sprite->origin.y * item.transform->scale.y * zoom, w, h};
         renderer.drawTexture(item.sprite->texture, item.sprite->src, dst,
-                             item.sprite->layer * 10000 + order, item.sprite->tint);
-        ++order;
+                             item.sprite->layer, item.sprite->tint);
     }
 }
 
